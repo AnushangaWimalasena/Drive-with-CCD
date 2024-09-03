@@ -152,3 +152,8 @@ data/CCD
 *tmp*
 examples/
 draw_curves.py
+
+
+# data
+CarCrashDataset/
+CarCrashDatasetV/
