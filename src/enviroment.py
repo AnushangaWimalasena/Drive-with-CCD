@@ -12,7 +12,7 @@ import time
 
 
 class DashCamEnv(core.Env):
-    def __init__(self, cfg, device=torch.device("cuda")):
+    def __init__(self, cfg, device=torch.device("mps")):
         self.device = device
         self.saliency = cfg.saliency
         if self.saliency == 'MLNet':
@@ -36,13 +36,17 @@ class DashCamEnv(core.Env):
         self.use_salmap = cfg.use_salmap
 
 
+    ## Load saliency model
     def set_model(self, pretrained=False, weight_file=None):
         if pretrained and weight_file is not None:
             # load model weight file
             assert os.path.exists(weight_file), "Checkpoint directory does not exist! %s"%(weight_file)
-            ckpt = torch.load(weight_file)
+            print("weight_file_path: ", weight_file)
+            ckpt = torch.load(weight_file, map_location=torch.device('cpu'))
             if self.saliency == 'MLNet':
-                self.observe_model.load_state_dict(ckpt['model'])
+                self.observe_model.load_state_dict(ckpt['model'], strict=False)
+                mps_device = torch.device("mps")
+                self.observe_model.to(mps_device)
             elif self.saliency == 'TASED-Net':
                 model_dict = self.observe_model.state_dict()
                 for name, param in ckpt.items():
@@ -76,6 +80,7 @@ class DashCamEnv(core.Env):
 
         # maximum number of steps
         self.max_steps = (self.video_data.size(1) - self.len_clip + 1) // self.step_size
+        print("self.max_steps", self.max_steps)
         # neg/pos labels
         self.clsID = data_info[:, 4].to(self.device)
         self.begin_accident = data_info[:, 5].to(self.device) / float(self.fps)  # time-of-accident (seconds), for neg: toa=-1

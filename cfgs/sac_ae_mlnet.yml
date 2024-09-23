@@ -1,5 +1,5 @@
 ENV:
-  data_path: ./data/DADA-2000-small
+  data_path: ./data
   batch_size: 5
   image_shape: [330, 792]
   input_shape: [480, 640]
